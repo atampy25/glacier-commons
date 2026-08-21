@@ -792,7 +792,17 @@ impl ResourceMetadata {
 				}
 			}
 
-			"BOXC" | "HIKC" | "IMAP" | "SLMX" => 0, // TODO: Calculate a proper estimate
+			"BOXC" => {
+				let mut cur = Cursor::new(data);
+				let mut x = [0; 4];
+				cur.read_exact(&mut x)?;
+				let entries = u32::from_be_bytes(x);
+
+				data.len() as u32 - entries * 16 - 4
+			}
+
+			// TODO: Calculate a proper estimate
+			"HIKC" | "IMAP" | "SLMX" => 0,
 
 			_ => return Err(MetadataCalculationError::UnknownResourceType(resource_type))
 		}
@@ -1684,7 +1694,12 @@ macro_rules! rid {
 					lower[i] = if b >= b'A' && b <= b'Z' { b + 32 } else { b };
 
 					if i >= 4 {
-						if lower[i - 4] == b']' && lower[i - 3] == b'.' && lower[i - 2] == b'p' && lower[i - 1] == b'c' && lower[i] == b'_' {
+						if lower[i - 4] == b']'
+							&& lower[i - 3] == b'.'
+							&& lower[i - 2] == b'p'
+							&& lower[i - 1] == b'c'
+							&& lower[i] == b'_'
+						{
 							has_platform_suffix = true;
 						}
 					}
