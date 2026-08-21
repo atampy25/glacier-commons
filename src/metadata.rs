@@ -792,7 +792,7 @@ impl ResourceMetadata {
 				}
 			}
 
-			"BOXC" | "HIKC" | "IMAP" | "SLMX" => todo!(),
+			"BOXC" | "HIKC" | "IMAP" | "SLMX" => 0, // TODO: Calculate a proper estimate
 
 			_ => return Err(MetadataCalculationError::UnknownResourceType(resource_type))
 		}
