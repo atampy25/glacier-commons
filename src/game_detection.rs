@@ -456,160 +456,158 @@ mod detection {
 
 		// Legendary installs
 		if let Some(home_dir) = home::home_dir() {
-			let legendary_installed_path = home_dir
-				.join(".config/legendary/installed.json")
-				.exists()
-				.then_some(home_dir.join(".config/legendary/installed.json"))
-				.or_else(|| {
-					home_dir
-						.join(".config/heroic/legendaryConfig/legendary/installed.json")
-						.exists()
-						.then_some(home_dir.join(".config/heroic/legendaryConfig/legendary/installed.json"))
-				});
+			for legendary_installed_path in [
+				home_dir.join(".config/legendary/installed.json"),
+				home_dir.join(".config/heroic/legendaryConfig/legendary/installed.json")
+			] {
+				if legendary_installed_path.exists() {
+					let legendary_installed_data: Value =
+						serde_json::from_slice(&fs::read(&legendary_installed_path).map_err(|x| {
+							GameDetectionError::Io(legendary_installed_path.to_string_lossy().into(), x)
+						})?)
+						.map_err(|x| {
+							GameDetectionError::JsonDeserialisation(
+								legendary_installed_path.to_string_lossy().into(),
+								x
+							)
+						})?;
 
-			if let Some(legendary_installed_path) = legendary_installed_path {
-				let legendary_installed_data: Value = serde_json::from_slice(
-					&fs::read(&legendary_installed_path)
-						.map_err(|x| GameDetectionError::Io(legendary_installed_path.to_string_lossy().into(), x))?
-				)
-				.map_err(|x| {
-					GameDetectionError::JsonDeserialisation(legendary_installed_path.to_string_lossy().into(), x)
-				})?;
+					// H3
+					if let Some(data) = legendary_installed_data.get("Eider") {
+						check_paths.push((
+							PathBuf::from(
+								data.get("install_path")
+									.ok_or_else(|| GameDetectionError::MissingField("install_path".into()))?
+									.as_str()
+									.ok_or_else(|| {
+										GameDetectionError::IncorrectType("install_path".into(), "string".into())
+									})?
+							),
+							StorePlatform::Epic
+						));
+					}
 
-				// H3
-				if let Some(data) = legendary_installed_data.get("Eider") {
-					check_paths.push((
-						PathBuf::from(
-							data.get("install_path")
-								.ok_or_else(|| GameDetectionError::MissingField("install_path".into()))?
-								.as_str()
-								.ok_or_else(|| {
-									GameDetectionError::IncorrectType("install_path".into(), "string".into())
-								})?
-						),
-						StorePlatform::Epic
-					));
-				}
+					// H1
+					if let Some(data) = legendary_installed_data.get("Barbet") {
+						check_paths.push((
+							PathBuf::from(
+								data.get("install_path")
+									.ok_or_else(|| GameDetectionError::MissingField("install_path".into()))?
+									.as_str()
+									.ok_or_else(|| {
+										GameDetectionError::IncorrectType("install_path".into(), "string".into())
+									})?
+							),
+							StorePlatform::Epic
+						));
+					}
 
-				// H1
-				if let Some(data) = legendary_installed_data.get("Barbet") {
-					check_paths.push((
-						PathBuf::from(
-							data.get("install_path")
-								.ok_or_else(|| GameDetectionError::MissingField("install_path".into()))?
-								.as_str()
-								.ok_or_else(|| {
-									GameDetectionError::IncorrectType("install_path".into(), "string".into())
-								})?
-						),
-						StorePlatform::Epic
-					));
-				}
-
-				// First Light
-				if let Some(data) = legendary_installed_data.get("6454af35a8234d5891a5159ad0a4f8bb") {
-					check_paths.push((
-						PathBuf::from(
-							data.get("install_path")
-								.ok_or_else(|| GameDetectionError::MissingField("install_path".into()))?
-								.as_str()
-								.ok_or_else(|| {
-									GameDetectionError::IncorrectType("install_path".into(), "string".into())
-								})?
-						),
-						StorePlatform::Epic
-					));
+					// First Light
+					if let Some(data) = legendary_installed_data.get("6454af35a8234d5891a5159ad0a4f8bb") {
+						check_paths.push((
+							PathBuf::from(
+								data.get("install_path")
+									.ok_or_else(|| GameDetectionError::MissingField("install_path".into()))?
+									.as_str()
+									.ok_or_else(|| {
+										GameDetectionError::IncorrectType("install_path".into(), "string".into())
+									})?
+							),
+							StorePlatform::Epic
+						));
+					}
 				}
 			}
 		}
 
 		// Steam installs
 		if let Some(home_dir) = home::home_dir() {
-			let steam_path = match home_dir {
-				home if home_dir.join(".local/share/Steam").exists() => Some(home.join(".local/share/Steam")),
-				home if home_dir.join(".steam/steam").exists() => Some(home.join(".steam/steam")),
-				home if home_dir.join(".var/app/com.valvesoftware.Steam/.steam/steam").exists() => {
-					Some(home.join(".var/app/com.valvesoftware.Steam/.steam/steam"))
-				}
-				_ => None
-			};
+			for steam_path in [
+				home_dir.join(".local/share/Steam"),
+				home_dir.join(".steam/steam"),
+				home_dir.join(".var/app/com.valvesoftware.Steam/.steam/steam")
+			] {
+				if steam_path.exists() {
+					let libraryfolders_path = if steam_path.join("config").join("libraryfolders.vdf").exists() {
+						steam_path.join("config").join("libraryfolders.vdf")
+					} else {
+						steam_path.join("steamapps").join("libraryfolders.vdf")
+					};
 
-			if let Some(steam_path) = steam_path {
-				let libraryfolders_path = if steam_path.join("config").join("libraryfolders.vdf").exists() {
-					steam_path.join("config").join("libraryfolders.vdf")
-				} else {
-					steam_path.join("steamapps").join("libraryfolders.vdf")
-				};
+					if let Ok(s) = fs::read_to_string(&libraryfolders_path) {
+						let folders: HashMap<String, SteamLibraryFolder> =
+							keyvalues_serde::from_str(&s).map_err(|x| {
+								GameDetectionError::VdfDeserialisation(
+									libraryfolders_path.to_string_lossy().into(),
+									x.into()
+								)
+							})?;
 
-				if let Ok(s) = fs::read_to_string(&libraryfolders_path) {
-					let folders: HashMap<String, SteamLibraryFolder> = keyvalues_serde::from_str(&s).map_err(|x| {
-						GameDetectionError::VdfDeserialisation(libraryfolders_path.to_string_lossy().into(), x.into())
-					})?;
+						for folder in folders.values() {
+							// H1, H1 free trial
+							if folder.apps.contains_key("236870") || folder.apps.contains_key("649780") {
+								check_paths.push((
+									PathBuf::from(&folder.path)
+										.join("steamapps")
+										.join("common")
+										.join("HITMAN™"),
+									StorePlatform::Steam
+								));
 
-					for folder in folders.values() {
-						// H1, H1 free trial
-						if folder.apps.contains_key("236870") || folder.apps.contains_key("649780") {
-							check_paths.push((
-								PathBuf::from(&folder.path)
-									.join("steamapps")
-									.join("common")
-									.join("HITMAN™"),
-								StorePlatform::Steam
-							));
+								check_paths.push((
+									PathBuf::from(&folder.path)
+										.join("steamapps")
+										.join("common")
+										.join("Hitman™"),
+									StorePlatform::Steam
+								));
 
-							check_paths.push((
-								PathBuf::from(&folder.path)
-									.join("steamapps")
-									.join("common")
-									.join("Hitman™"),
-								StorePlatform::Steam
-							));
+								check_paths.push((
+									PathBuf::from(&folder.path)
+										.join("steamapps")
+										.join("common")
+										.join("Hitman™")
+										.join("share")
+										.join("data"),
+									StorePlatform::Steam
+								));
+							}
 
-							check_paths.push((
-								PathBuf::from(&folder.path)
-									.join("steamapps")
-									.join("common")
-									.join("Hitman™")
-									.join("share")
-									.join("data"),
-								StorePlatform::Steam
-							));
-						}
+							// H2
+							if folder.apps.contains_key("863550") {
+								check_paths.push((
+									PathBuf::from(&folder.path)
+										.join("steamapps")
+										.join("common")
+										.join("HITMAN2"),
+									StorePlatform::Steam
+								));
+							}
 
-						// H2
-						if folder.apps.contains_key("863550") {
-							check_paths.push((
-								PathBuf::from(&folder.path)
-									.join("steamapps")
-									.join("common")
-									.join("HITMAN2"),
-								StorePlatform::Steam
-							));
-						}
+							// H3, H3 demo
+							if folder.apps.contains_key("1659040") || folder.apps.contains_key("1847520") {
+								check_paths.push((
+									PathBuf::from(&folder.path)
+										.join("steamapps")
+										.join("common")
+										.join("HITMAN 3"),
+									StorePlatform::Steam
+								));
+							}
 
-						// H3, H3 demo
-						if folder.apps.contains_key("1659040") || folder.apps.contains_key("1847520") {
-							check_paths.push((
-								PathBuf::from(&folder.path)
-									.join("steamapps")
-									.join("common")
-									.join("HITMAN 3"),
-								StorePlatform::Steam
-							));
-						}
-
-						// First Light
-						if folder.apps.contains_key("3768760") {
-							check_paths.push((
-								PathBuf::from(&folder.path)
-									.join("steamapps")
-									.join("common")
-									.join("007 First Light"),
-								StorePlatform::Steam
-							));
+							// First Light
+							if folder.apps.contains_key("3768760") {
+								check_paths.push((
+									PathBuf::from(&folder.path)
+										.join("steamapps")
+										.join("common")
+										.join("007 First Light"),
+									StorePlatform::Steam
+								));
+							}
 						}
 					}
-				};
+				}
 			}
 		}
 
