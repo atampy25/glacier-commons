@@ -704,6 +704,7 @@ impl ResourceMetadata {
 			"LINE" | "WWES" | "WWEM" | "TEXT" | "ERES" | "GFXV" | "TEXD" | "WSGT" | "ASET" | "CLNG" | "ECPT"
 			| "UICT" | "WSWT" | "AIBX" | "ASEB" => false,
 
+			// TODO: Check VOXL
 			_ => true
 		}
 	}
@@ -715,11 +716,12 @@ impl ResourceMetadata {
 		data: &[u8]
 	) -> Result<u32, MetadataCalculationError> {
 		match resource_type.as_ref() {
+			// TODO: Check VOXL
 			"AIBX" | "AIBZ" | "AIRG" | "ASEB" | "ASET" | "ASVA" | "ATMD" | "BLOB" | "BMSK" | "BORG" | "BOXC"
 			| "CRMD" | "DITL" | "DLGE" | "ECPT" | "ENUM" | "ERES" | "GFXF" | "GFXI" | "GFXV" | "JSON" | "LINE"
 			| "LOCR" | "MATB" | "MATE" | "MATI" | "MATT" | "NAVP" | "ORES" | "PRIM" | "REPO" | "RTLV" | "SDEF"
-			| "TEXD" | "TEXT" | "UICT" | "VIDB" | "VTXD" | "WBNK" | "WSGT" | "WSWT" | "WWEM" | "WWES" | "WWEV"
-			| "TELI" | "CLNG" => 0xFFFFFFFF,
+			| "TEXD" | "TEXT" | "UICT" | "VIDB" | "VOXL" | "VTXD" | "WBNK" | "WSGT" | "WSWT" | "WWEM" | "WWES"
+			| "WWEV" | "TELI" | "CLNG" => 0xFFFFFFFF,
 
 			"AIBB" | "CBLU" | "CPPT" | "DSWB" | "ECPB" | "GIDX" | "TEMP" | "TBLU" | "UICB" | "WSGB" | "WSWB" => {
 				let mut cur = Cursor::new(data);
@@ -756,7 +758,7 @@ impl ResourceMetadata {
 			| "CBLU" | "CLNG" | "CPPT" | "CRMD" | "DITL" | "DLGE" | "DSWB" | "ECPB" | "ECPT" | "ENUM" | "ERES"
 			| "GFXF" | "GFXI" | "GFXV" | "JSON" | "LINE" | "LOCR" | "MATB" | "MATE" | "MATI" | "MATT" | "GIDX"
 			| "NAVP" | "ORES" | "PRIM" | "REPO" | "RTLV" | "SDEF" | "TBLU" | "TELI" | "TEMP" | "UICB" | "UICT"
-			| "VIDB" | "VTXD" | "WBNK" | "WSGB" | "WSGT" | "WSWB" | "WSWT" | "WWEM" | "WWES" | "WWEV" => 0xFFFFFFFF,
+			| "VIDB" | "VOXL" | "VTXD" | "WBNK" | "WSGB" | "WSGT" | "WSWB" | "WSWT" | "WWEM" | "WWES" | "WWEV" => 0xFFFFFFFF,
 
 			"ALOC" | "FXAC" | "FXAS" | "MJBA" | "MRTN" | "MRTR" | "PREL" | "SCDA" | "YSHP" => 0,
 
@@ -1072,6 +1074,7 @@ impl ResourceType {
 		resource_type!("UICB"),
 		resource_type!("UICT"),
 		resource_type!("VIDB"),
+		resource_type!("VOXL"),
 		resource_type!("VTXD"),
 		resource_type!("WBNK"),
 		resource_type!("WSGB"),
@@ -1196,6 +1199,7 @@ impl ResourceType {
 		resource_type!("TEMP"),
 		resource_type!("UICB"),
 		resource_type!("VIDB"),
+		resource_type!("VOXL"),
 		resource_type!("WSGB"),
 		resource_type!("WSWB"),
 		resource_type!("CLRP"),
