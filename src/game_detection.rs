@@ -458,7 +458,8 @@ mod detection {
 		if let Some(home_dir) = home::home_dir() {
 			for legendary_installed_path in [
 				home_dir.join(".config/legendary/installed.json"),
-				home_dir.join(".config/heroic/legendaryConfig/legendary/installed.json")
+				home_dir.join(".config/heroic/legendaryConfig/legendary/installed.json"),
+				home_dir.join(".var/app/com.heroicgameslauncher.hgl/config/heroic/legendaryConfig/legendary/installed.json")
 			] {
 				if legendary_installed_path.exists() {
 					let legendary_installed_data: Value =
