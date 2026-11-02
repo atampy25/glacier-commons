@@ -170,7 +170,7 @@ impl Debug for RuntimeID {
 /// For identifying platform-specific paths from the Hitman trilogy.
 #[static_init::dynamic]
 pub(crate) static PLATFORM_REGEX: Regex = Regex::new(&format!(
-	r"\.((?:{})_)([a-z\-]+)$",
+	r"\.((?:{})_)([a-z0-9\-]+)$",
 	["pc", "macos", "ios", "orbis", "ps5", "durango", "scarlett", "izumo"].join("|")
 ))
 .unwrap();
