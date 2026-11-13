@@ -203,7 +203,8 @@ mod detection {
 									.as_str()
 									.ok_or_else(|| {
 										GameDetectionError::IncorrectType("AppName".into(), "string".into())
-									})? == "Eider"
+									})?
+									== "Eider"
 								{
 									check_paths.push((
 										PathBuf::from(
@@ -231,7 +232,8 @@ mod detection {
 									.as_str()
 									.ok_or_else(|| {
 										GameDetectionError::IncorrectType("AppName".into(), "string".into())
-									})? == "Barbet"
+									})?
+									== "Barbet"
 								{
 									check_paths.push((
 										PathBuf::from(
@@ -259,7 +261,8 @@ mod detection {
 									.as_str()
 									.ok_or_else(|| {
 										GameDetectionError::IncorrectType("AppName".into(), "string".into())
-									})? == "6454af35a8234d5891a5159ad0a4f8bb"
+									})?
+									== "6454af35a8234d5891a5159ad0a4f8bb"
 								{
 									check_paths.push((
 										PathBuf::from(
@@ -459,7 +462,9 @@ mod detection {
 			for legendary_installed_path in [
 				home_dir.join(".config/legendary/installed.json"),
 				home_dir.join(".config/heroic/legendaryConfig/legendary/installed.json"),
-				home_dir.join(".var/app/com.heroicgameslauncher.hgl/config/heroic/legendaryConfig/legendary/installed.json")
+				home_dir.join(
+					".var/app/com.heroicgameslauncher.hgl/config/heroic/legendaryConfig/legendary/installed.json"
+				)
 			] {
 				if legendary_installed_path.exists() {
 					let legendary_installed_data: Value =

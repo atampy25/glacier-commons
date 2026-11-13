@@ -1594,21 +1594,14 @@ impl TryFrom<&rpkg_rs_2::resource::resource_info::ResourceInfo> for ExtendedReso
 					.map(|(id, flags)| {
 						Ok::<_, Self::Error>(ResourceReference {
 							resource: RuntimeID::try_from(*id).map_err(FromResourceInfoError::InvalidID)?,
-							flags: ReferenceFlags {
-								reference_type: match flags.reference_type() {
-									rpkg_rs_2::resource::resource_package::ReferenceType::INSTALL => {
-										ReferenceType::Install
-									}
-									rpkg_rs_2::resource::resource_package::ReferenceType::NORMAL => {
-										ReferenceType::Normal
-									}
-									rpkg_rs_2::resource::resource_package::ReferenceType::WEAK => ReferenceType::Weak,
-									rpkg_rs_2::resource::resource_package::ReferenceType::STREAMED => {
-										ReferenceType::Streamed
-									}
-								},
-								acquired: flags.is_acquired(),
-								language_code: flags.language_code()
+							flags: match flags {
+								rpkg_rs_2::resource::resource_package::ResourceReferenceFlags::Legacy(_) => {
+									ReferenceFlags::from_legacy(flags.as_byte())
+								}
+
+								rpkg_rs_2::resource::resource_package::ResourceReferenceFlags::Standard(_) => {
+									ReferenceFlags::from_modern(flags.as_byte())
+								}
 							}
 						})
 					})
@@ -1637,17 +1630,14 @@ impl TryFrom<&rpkg_rs_2::resource::resource_info::ResourceInfo> for ResourceMeta
 				.map(|(id, flags)| {
 					Ok::<_, Self::Error>(ResourceReference {
 						resource: RuntimeID::try_from(*id).map_err(FromResourceInfoError::InvalidID)?,
-						flags: ReferenceFlags {
-							reference_type: match flags.reference_type() {
-								rpkg_rs_2::resource::resource_package::ReferenceType::INSTALL => ReferenceType::Install,
-								rpkg_rs_2::resource::resource_package::ReferenceType::NORMAL => ReferenceType::Normal,
-								rpkg_rs_2::resource::resource_package::ReferenceType::WEAK => ReferenceType::Weak,
-								rpkg_rs_2::resource::resource_package::ReferenceType::STREAMED => {
-									ReferenceType::Streamed
-								}
-							},
-							acquired: flags.is_acquired(),
-							language_code: flags.language_code()
+						flags: match flags {
+							rpkg_rs_2::resource::resource_package::ResourceReferenceFlags::Legacy(_) => {
+								ReferenceFlags::from_legacy(flags.as_byte())
+							}
+
+							rpkg_rs_2::resource::resource_package::ResourceReferenceFlags::Standard(_) => {
+								ReferenceFlags::from_modern(flags.as_byte())
+							}
 						}
 					})
 				})
