@@ -1592,15 +1592,7 @@ impl TryFrom<&rpkg_rs_2::resource::resource_info::ResourceInfo> for ExtendedReso
 					.map(|(id, flags)| {
 						Ok::<_, Self::Error>(ResourceReference {
 							resource: RuntimeID::try_from(*id).map_err(FromResourceInfoError::InvalidID)?,
-							flags: match flags {
-								rpkg_rs_2::resource::resource_package::ResourceReferenceFlags::Legacy(_) => {
-									ReferenceFlags::from_legacy(flags.as_byte())
-								}
-
-								rpkg_rs_2::resource::resource_package::ResourceReferenceFlags::Standard(_) => {
-									ReferenceFlags::from_modern(flags.as_byte())
-								}
-							}
+							flags: flags.into()
 						})
 					})
 					.collect::<Result<_, _>>()?,
@@ -1628,20 +1620,42 @@ impl TryFrom<&rpkg_rs_2::resource::resource_info::ResourceInfo> for ResourceMeta
 				.map(|(id, flags)| {
 					Ok::<_, Self::Error>(ResourceReference {
 						resource: RuntimeID::try_from(*id).map_err(FromResourceInfoError::InvalidID)?,
-						flags: match flags {
-							rpkg_rs_2::resource::resource_package::ResourceReferenceFlags::Legacy(_) => {
-								ReferenceFlags::from_legacy(flags.as_byte())
-							}
-
-							rpkg_rs_2::resource::resource_package::ResourceReferenceFlags::Standard(_) => {
-								ReferenceFlags::from_modern(flags.as_byte())
-							}
-						}
+						flags: flags.into()
 					})
 				})
 				.collect::<Result<_, _>>()?,
 			compressed: info.is_compressed(),
 			scrambled: info.is_scrambled()
+		}
+	}
+}
+
+#[cfg(feature = "rpkg-rs-2")]
+impl From<rpkg_rs_2::resource::resource_package::ResourceReferenceFlags> for ReferenceFlags {
+	fn from(flags: rpkg_rs_2::resource::resource_package::ResourceReferenceFlags) -> Self {
+		match flags {
+			rpkg_rs_2::resource::resource_package::ResourceReferenceFlags::Legacy(_) => {
+				Self::from_legacy(flags.as_byte())
+			}
+
+			rpkg_rs_2::resource::resource_package::ResourceReferenceFlags::Standard(_) => {
+				Self::from_modern(flags.as_byte())
+			}
+		}
+	}
+}
+
+#[cfg(feature = "rpkg-rs-2")]
+impl From<&rpkg_rs_2::resource::resource_package::ResourceReferenceFlags> for ReferenceFlags {
+	fn from(flags: &rpkg_rs_2::resource::resource_package::ResourceReferenceFlags) -> Self {
+		match flags {
+			rpkg_rs_2::resource::resource_package::ResourceReferenceFlags::Legacy(_) => {
+				Self::from_legacy(flags.as_byte())
+			}
+
+			rpkg_rs_2::resource::resource_package::ResourceReferenceFlags::Standard(_) => {
+				Self::from_modern(flags.as_byte())
+			}
 		}
 	}
 }
