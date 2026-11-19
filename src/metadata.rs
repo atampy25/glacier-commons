@@ -97,7 +97,7 @@ impl schemars::JsonSchema for RuntimeID {
 #[cfg_attr(feature = "rune", rune(item = ::glacier_commons::metadata))]
 #[cfg_attr(feature = "rune", rune_derive(DISPLAY_FMT, DEBUG_FMT))]
 pub enum FromU64Error {
-	#[error("value too high; must be less than 00FFFFFFFFFFFFFF")]
+	#[error("value too high; must be less than 04FFFFFFFFFFFFFF")]
 	TooHigh
 }
 
@@ -337,23 +337,21 @@ impl TryFrom<&rpkg_rs_1::resource::runtime_resource_id::RuntimeResourceID> for R
 
 #[cfg(feature = "rpkg-rs-2")]
 impl TryFrom<rpkg_rs_2::resource::runtime_resource_id::RuntimeResourceID> for RuntimeID {
-	type Error = RuntimeIDFromHashError;
+	type Error = FromU64Error;
 
 	#[try_fn]
 	fn try_from(val: rpkg_rs_2::resource::runtime_resource_id::RuntimeResourceID) -> Result<Self, Self::Error> {
-		// TODO: We should be able to use the u64 directly instead of having to convert to/from a string.
-		RuntimeID::from_hash(&val.to_hex_string())?
+		RuntimeID::from_u64(val.into())?
 	}
 }
 
 #[cfg(feature = "rpkg-rs-2")]
 impl TryFrom<&rpkg_rs_2::resource::runtime_resource_id::RuntimeResourceID> for RuntimeID {
-	type Error = RuntimeIDFromHashError;
+	type Error = FromU64Error;
 
 	#[try_fn]
 	fn try_from(val: &rpkg_rs_2::resource::runtime_resource_id::RuntimeResourceID) -> Result<Self, Self::Error> {
-		// TODO: We should be able to use the u64 directly instead of having to convert to/from a string.
-		RuntimeID::from_hash(&val.to_hex_string())?
+		RuntimeID::from_u64((*val).into())?
 	}
 }
 
@@ -1496,7 +1494,7 @@ use rpkg_rs_1::resource::resource_info::ResourceInfo;
 #[cfg_attr(feature = "rune", rune_derive(DISPLAY_FMT, DEBUG_FMT))]
 pub enum FromResourceInfoError {
 	#[error("invalid RuntimeID: {0}")]
-	InvalidID(#[from] RuntimeIDFromHashError),
+	InvalidID(#[from] FromU64Error),
 
 	#[error("invalid resource type")]
 	InvalidResourceType
