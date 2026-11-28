@@ -734,7 +734,7 @@ impl ResourceMetadata {
 
 			"FXAS" | "MJBA" | "MRTN" | "MRTR" | "SCDA" => data.len() as u32,
 
-			"PREL" => (data.len() - 0x10) as u32,
+			"PREL" => data.len().checked_sub(0x10).unwrap_or(0) as u32,
 
 			"YSHP" => ((data.len() as f64) * 1.5) as u32,
 
@@ -798,7 +798,7 @@ impl ResourceMetadata {
 				cur.read_exact(&mut x)?;
 				let entries = u32::from_be_bytes(x);
 
-				data.len() as u32 - entries * 16 - 4
+				data.len() as u32 - entries.checked_mul(16).unwrap_or(0) - 4
 			}
 
 			// TODO: Calculate a proper estimate
